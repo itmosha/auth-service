@@ -1,0 +1,7 @@
+env: "local"
+db:
+  max_open_conns: 5
+  max_idle_conns: 10
+http_server:
+  timeout: 5s
+  idle_timeout: 60s
