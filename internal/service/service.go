@@ -7,6 +7,7 @@ import (
 	HTTP "net/http"
 
 	"github.com/itmosha/auth-service/internal/config"
+	"github.com/itmosha/auth-service/internal/controller"
 	"github.com/itmosha/auth-service/internal/http"
 	"github.com/itmosha/auth-service/pkg/logger"
 	"github.com/itmosha/auth-service/pkg/postgres"
@@ -18,11 +19,12 @@ func Run(cfg *config.Config) {
 		log.Fatalf("could not create postgres client: %v\n", err)
 	}
 	logger := logger.NewLogger("logs/auth.log", cfg.Env)
-
 	_ = pgClient
 	_ = logger
 
-	router := http.NewRouter()
+	controller := controller.NewController(logger)
+
+	router := http.NewRouter(controller)
 
 	server := &HTTP.Server{
 		Handler:      router,

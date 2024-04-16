@@ -1,15 +1,19 @@
 package http
 
-import "net/http"
+import (
+	"net/http"
+
+	"github.com/itmosha/auth-service/internal/controller"
+)
 
 // @Title Check service health
 // @Success 200 {}
 // @Resource Health
 // @Route /health [get]
-func NewRouter() (router *http.ServeMux) {
+func NewRouter(controller *controller.Controller) (router *http.ServeMux) {
 	router = http.NewServeMux()
 
-	router.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
+	router.HandleFunc("GET /health", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 	})
 	return

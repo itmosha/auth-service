@@ -37,7 +37,9 @@ func (l *Logger) Log(r *http.Request, status int, err error) {
 	}
 
 	if status >= 400 {
-		requestInfo = append(requestInfo, slog.String("error", err.Error()))
+		if err != nil {
+			requestInfo = append(requestInfo, slog.String("error", err.Error()))
+		}
 		l.log.Error("API request", requestInfo...)
 	} else {
 		l.log.Info("API request", requestInfo...)
