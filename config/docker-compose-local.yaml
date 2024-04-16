@@ -32,7 +32,7 @@ services:
     container_name: auth-service
     build:
       context: ..
-      dockerfile: ./config/Dockerfile
+      dockerfile: ./config/service.Dockerfile
       target: runner
     depends_on: 
       postgres:
@@ -43,14 +43,25 @@ services:
       - ../logs:/app/logs
     ports:
       - 8080:8080
-  
+
+  swagger-generator:
+    container_name: auth-swagger-generator
+    build:
+      context: ..
+      dockerfile: ./config/swagger_generator.Dockerfile
+    volumes:
+      - ../api:/app/api
+    depends_on:
+      - service
+
   swagger:
     container_name: auth-swagger
     image: swaggerapi/swagger-ui
     environment:
-      SWAGGER_JSON: "/app/swagger.yaml"
+      SWAGGER_JSON: "/app/api/swagger.yaml"
     volumes:
-      - ../api/swagger.yaml:/app/swagger.yaml
+      - ../api:/app/api
     ports:
       - 8000:8080
-  
+    depends_on:
+      - swagger-generator

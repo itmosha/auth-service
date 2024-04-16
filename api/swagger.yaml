@@ -1,0 +1,25 @@
+components:
+  securitySchemes:
+    JWT:
+      description: Your JWT token
+      scheme: bearer
+      type: http
+info:
+  description: Auth service which is responsible for user authentication and authorization.
+  title: Auth Service
+  version: 0.0.1
+openapi: 3.0.0
+paths:
+  /health:
+    get:
+      responses:
+        "200":
+          description: ""
+      summary: Check service health
+      tags:
+      - Health
+security:
+- Authorization: []
+servers:
+- description: Default Server URL
+  url: /
