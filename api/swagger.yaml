@@ -1,4 +1,10 @@
 components:
+  schemas:
+    ErrorResponseBody:
+      properties:
+        message:
+          type: string
+      type: object
   securitySchemes:
     JWT:
       description: Your JWT token
@@ -10,6 +16,78 @@ info:
   version: 0.0.1
 openapi: 3.0.0
 paths:
+  /api/login/:
+    post:
+      responses:
+        "501":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseBody'
+          description: ""
+      summary: Log in user.
+      tags:
+      - Auth
+  /api/login/confirm/:
+    post:
+      responses:
+        "501":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseBody'
+          description: ""
+      summary: Confirm user login.
+      tags:
+      - Auth
+  /api/refresh/:
+    post:
+      responses:
+        "501":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseBody'
+          description: ""
+      summary: Refresh token pair.
+      tags:
+      - Auth
+  /api/register/:
+    post:
+      responses:
+        "501":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseBody'
+          description: ""
+      summary: Register new user.
+      tags:
+      - Auth
+  /api/register/confirm/:
+    post:
+      responses:
+        "501":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseBody'
+          description: ""
+      summary: Confirm user registration.
+      tags:
+      - Auth
+  /api/revoke/:
+    post:
+      responses:
+        "501":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseBody'
+          description: ""
+      summary: Revoke token pair.
+      tags:
+      - Auth
   /health:
     get:
       responses:

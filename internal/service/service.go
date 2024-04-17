@@ -9,6 +9,8 @@ import (
 	"github.com/itmosha/auth-service/internal/config"
 	"github.com/itmosha/auth-service/internal/controller"
 	"github.com/itmosha/auth-service/internal/http"
+	storage "github.com/itmosha/auth-service/internal/storage/postgres"
+	"github.com/itmosha/auth-service/internal/usecase"
 	"github.com/itmosha/auth-service/pkg/logger"
 	"github.com/itmosha/auth-service/pkg/postgres"
 )
@@ -22,7 +24,9 @@ func Run(cfg *config.Config) {
 	_ = pgClient
 	_ = logger
 
-	controller := controller.NewController(logger)
+	storage := storage.NewAuthStoragePostgres(pgClient)
+	usecase := usecase.NewAuthUsecase(storage)
+	controller := controller.NewController(usecase, logger)
 
 	router := http.NewRouter(controller)
 
