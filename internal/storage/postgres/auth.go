@@ -1,7 +1,7 @@
 package storage
 
 import (
-	"github.com/itmosha/auth-service/pkg/postgres"
+	"github.com/itmosha/auth-service/pkg/clients/postgres"
 )
 
 type StoragePostgres struct {

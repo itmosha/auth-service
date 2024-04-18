@@ -20,6 +20,7 @@ type (
 	Config struct {
 		Env        EnvType `yaml:"env" env-required:"true"`
 		DB         `yaml:"db"`
+		Cache      `yaml:"cache"`
 		HTTPServer `yaml:"http_server"`
 	}
 	DB struct {
@@ -35,6 +36,10 @@ type (
 		Timeout     time.Duration `yaml:"timeout" env-default:"5s"`
 		IdleTimeout time.Duration `yaml:"idle_timeout" env-default:"60s"`
 		LogFileName string        `yaml:"log_file_name" env-default:"service.log"`
+	}
+	Cache struct {
+		Host string `yaml:"host" env-default:"auth-redis"`
+		Pass string `env:"REDIS_PASSWORD"`
 	}
 )
 
@@ -54,6 +59,7 @@ func NewConfig() *Config {
 	}
 	cfg.DB.User = readEnvVar("POSTGRES_USER")
 	cfg.DB.Pass = readEnvVar("POSTGRES_PASSWORD")
+	cfg.Cache.Pass = readEnvVar("REDIS_PASSWORD")
 	return &cfg
 }
 

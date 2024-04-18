@@ -1,5 +1,8 @@
 version: '3'
 
+volumes:
+  redisdata:
+
 services:
   postgres:
     container_name: auth-postgres
@@ -29,6 +32,23 @@ services:
     command: 
       [ "-path", "/migrations", "-database",  "postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@auth-postgres/auth?sslmode=disable", "up" ]
 
+  redis:
+    container_name: auth-redis
+    image: redis:alpine
+    command: >
+      --requirepass ${REDIS_PASSWORD}
+    volumes:
+      - redisdata:/opt/redis/data
+      - ../logs:/opt/redis/logs
+    expose:
+      - 6379
+    healthcheck:
+      test: redis-cli --no-auth-warning -a ${REDIS_PASSWORD} ping | grep PONG
+      interval: 3s
+      timeout: 3s
+      retries: 5
+    restart: unless-stopped
+
   service:
     container_name: auth-service
     build:
@@ -40,6 +60,8 @@ services:
         condition: service_healthy
       migrate:
         condition: service_completed_successfully
+      redis:
+        condition: service_healthy
     volumes:
       - ../logs:/app/logs
     ports:

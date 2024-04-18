@@ -17,8 +17,9 @@ import (
 	"github.com/itmosha/auth-service/internal/http/middleware"
 	storage "github.com/itmosha/auth-service/internal/storage/postgres"
 	"github.com/itmosha/auth-service/internal/usecase"
+	"github.com/itmosha/auth-service/pkg/clients/postgres"
+	"github.com/itmosha/auth-service/pkg/clients/redis"
 	"github.com/itmosha/auth-service/pkg/logger"
-	"github.com/itmosha/auth-service/pkg/postgres"
 )
 
 func Run(cfg *config.Config) {
@@ -26,6 +27,9 @@ func Run(cfg *config.Config) {
 	if err != nil {
 		log.Fatalf("could not create postgres client: %v\n", err)
 	}
+	redisClient := redis.NewRedisClient(&cfg.Cache)
+	_ = redisClient
+
 	logger := logger.NewLogger("logs/"+cfg.HTTPServer.LogFileName, cfg.Env)
 
 	storage := storage.NewStoragePostgres(pgClient)
