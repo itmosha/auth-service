@@ -23,8 +23,7 @@ func NewController(uc UsecaseInterface, logger *logger.Logger) *Controller {
 // @Route /api/register/ [post]
 func (c *Controller) Register() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		ResponseWithError(w, http.StatusNotImplemented, ErrServerError)
-		c.logger.Log(r, http.StatusNotImplemented, nil)
+		ResponseWithError(w, r, http.StatusNotImplemented, ErrServerError)
 	}
 }
 
@@ -34,8 +33,7 @@ func (c *Controller) Register() http.HandlerFunc {
 // @Route /api/register/confirm/ [post]
 func (c *Controller) ConfirmRegister() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		ResponseWithError(w, http.StatusNotImplemented, ErrServerError)
-		c.logger.Log(r, http.StatusNotImplemented, nil)
+		ResponseWithError(w, r, http.StatusNotImplemented, ErrServerError)
 	}
 }
 
@@ -45,8 +43,7 @@ func (c *Controller) ConfirmRegister() http.HandlerFunc {
 // @Route /api/login/ [post]
 func (c *Controller) Login() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		ResponseWithError(w, http.StatusNotImplemented, ErrServerError)
-		c.logger.Log(r, http.StatusNotImplemented, nil)
+		ResponseWithError(w, r, http.StatusNotImplemented, ErrServerError)
 	}
 }
 
@@ -56,8 +53,7 @@ func (c *Controller) Login() http.HandlerFunc {
 // @Route /api/login/confirm/ [post]
 func (c *Controller) ConfirmLogin() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		ResponseWithError(w, http.StatusNotImplemented, ErrServerError)
-		c.logger.Log(r, http.StatusNotImplemented, nil)
+		ResponseWithError(w, r, http.StatusNotImplemented, ErrServerError)
 	}
 }
 
@@ -67,8 +63,7 @@ func (c *Controller) ConfirmLogin() http.HandlerFunc {
 // @Route /api/refresh/ [post]
 func (c *Controller) Refresh() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		ResponseWithError(w, http.StatusNotImplemented, ErrServerError)
-		c.logger.Log(r, http.StatusNotImplemented, nil)
+		ResponseWithError(w, r, http.StatusNotImplemented, ErrServerError)
 	}
 }
 
@@ -78,7 +73,6 @@ func (c *Controller) Refresh() http.HandlerFunc {
 // @Route /api/revoke/ [post]
 func (c *Controller) Revoke() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		ResponseWithError(w, http.StatusNotImplemented, ErrServerError)
-		c.logger.Log(r, http.StatusNotImplemented, nil)
+		ResponseWithError(w, r, http.StatusNotImplemented, ErrServerError)
 	}
 }

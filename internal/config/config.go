@@ -34,6 +34,7 @@ type (
 		RunPort     string        `ENV:"RUN_PORT" env-default:"8080"`
 		Timeout     time.Duration `yaml:"timeout" env-default:"5s"`
 		IdleTimeout time.Duration `yaml:"idle_timeout" env-default:"60s"`
+		LogFileName string        `yaml:"log_file_name" env-default:"service.log"`
 	}
 )
 
@@ -53,7 +54,6 @@ func NewConfig() *Config {
 	}
 	cfg.DB.User = readEnvVar("POSTGRES_USER")
 	cfg.DB.Pass = readEnvVar("POSTGRES_PASSWORD")
-
 	return &cfg
 }
 

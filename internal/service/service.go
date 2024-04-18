@@ -14,6 +14,7 @@ import (
 	"github.com/itmosha/auth-service/internal/config"
 	"github.com/itmosha/auth-service/internal/controller"
 	"github.com/itmosha/auth-service/internal/http"
+	"github.com/itmosha/auth-service/internal/http/middleware"
 	storage "github.com/itmosha/auth-service/internal/storage/postgres"
 	"github.com/itmosha/auth-service/internal/usecase"
 	"github.com/itmosha/auth-service/pkg/logger"
@@ -25,9 +26,7 @@ func Run(cfg *config.Config) {
 	if err != nil {
 		log.Fatalf("could not create postgres client: %v\n", err)
 	}
-	logger := logger.NewLogger("logs/auth.log", cfg.Env)
-	_ = pgClient
-	_ = logger
+	logger := logger.NewLogger("logs/"+cfg.HTTPServer.LogFileName, cfg.Env)
 
 	storage := storage.NewStoragePostgres(pgClient)
 	usecase := usecase.NewUsecase(storage)
@@ -36,7 +35,7 @@ func Run(cfg *config.Config) {
 	router := http.NewRouter(controller)
 
 	server := &HTTP.Server{
-		Handler:      router,
+		Handler:      middleware.LoggerMiddleware(logger, router),
 		Addr:         fmt.Sprintf(":%s", cfg.HTTPServer.RunPort),
 		WriteTimeout: cfg.HTTPServer.Timeout,
 		ReadTimeout:  cfg.HTTPServer.Timeout,
