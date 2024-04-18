@@ -1,8 +1,13 @@
 package service
 
 import (
+	"context"
 	"fmt"
 	"log"
+	"os"
+	"os/signal"
+	"syscall"
+	"time"
 
 	HTTP "net/http"
 
@@ -24,8 +29,8 @@ func Run(cfg *config.Config) {
 	_ = pgClient
 	_ = logger
 
-	storage := storage.NewAuthStoragePostgres(pgClient)
-	usecase := usecase.NewAuthUsecase(storage)
+	storage := storage.NewStoragePostgres(pgClient)
+	usecase := usecase.NewUsecase(storage)
 	controller := controller.NewController(usecase, logger)
 
 	router := http.NewRouter(controller)
@@ -37,6 +42,35 @@ func Run(cfg *config.Config) {
 		ReadTimeout:  cfg.HTTPServer.Timeout,
 		IdleTimeout:  cfg.HTTPServer.IdleTimeout,
 	}
-	log.Printf("starting server on port %s\n", cfg.HTTPServer.RunPort)
-	log.Fatal(server.ListenAndServe())
+
+	serverErrs := make(chan error, 1)
+	go func() {
+		log.Println("Server starting on port", cfg.HTTPServer.RunPort)
+		serverErrs <- server.ListenAndServe()
+	}()
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+
+	shutdown := gracefulShutdown(server)
+
+	select {
+	case err := <-serverErrs:
+		shutdown(err)
+	case sig := <-quit:
+		shutdown(sig)
+	}
+	log.Println("Server exiting")
+}
+
+func gracefulShutdown(server *HTTP.Server) func(reason interface{}) {
+	return func(reason interface{}) {
+		log.Println("Service graceful shutdown:", reason)
+
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+
+		if err := server.Shutdown(ctx); err != nil {
+			log.Println("Service graceful shutdown Failed:", err)
+		}
+	}
 }

@@ -4,7 +4,7 @@ import (
 	"net/http"
 )
 
-type AuthHandlerInterface interface {
+type ControllerInterface interface {
 	Register() http.HandlerFunc
 	ConfirmRegister() http.HandlerFunc
 	Login() http.HandlerFunc
@@ -17,7 +17,7 @@ type AuthHandlerInterface interface {
 // @Success 200 {}
 // @Resource Health
 // @Route /health [get]
-func NewRouter(controller AuthHandlerInterface) (router *http.ServeMux) {
+func NewRouter(controller ControllerInterface) (router *http.ServeMux) {
 	router = http.NewServeMux()
 
 	router.HandleFunc("GET /health", func(w http.ResponseWriter, r *http.Request) {

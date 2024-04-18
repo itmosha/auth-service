@@ -6,22 +6,22 @@ import (
 	"github.com/itmosha/auth-service/pkg/logger"
 )
 
-type AuthUsecaseInterface interface{}
+type UsecaseInterface interface{}
 
-type AuthController struct {
-	usecase AuthUsecaseInterface
+type Controller struct {
+	usecase UsecaseInterface
 	logger  *logger.Logger
 }
 
-func NewController(uc AuthUsecaseInterface, logger *logger.Logger) *AuthController {
-	return &AuthController{uc, logger}
+func NewController(uc UsecaseInterface, logger *logger.Logger) *Controller {
+	return &Controller{uc, logger}
 }
 
 // @Title Register new user.
 // @Failure 501 {object} ErrorResponseBody
 // @Resource Auth
 // @Route /api/register/ [post]
-func (c *AuthController) Register() http.HandlerFunc {
+func (c *Controller) Register() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ResponseWithError(w, http.StatusNotImplemented, ErrServerError)
 		c.logger.Log(r, http.StatusNotImplemented, nil)
@@ -32,7 +32,7 @@ func (c *AuthController) Register() http.HandlerFunc {
 // @Failure 501 {object} ErrorResponseBody
 // @Resource Auth
 // @Route /api/register/confirm/ [post]
-func (c *AuthController) ConfirmRegister() http.HandlerFunc {
+func (c *Controller) ConfirmRegister() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ResponseWithError(w, http.StatusNotImplemented, ErrServerError)
 		c.logger.Log(r, http.StatusNotImplemented, nil)
@@ -43,7 +43,7 @@ func (c *AuthController) ConfirmRegister() http.HandlerFunc {
 // @Failure 501 {object} ErrorResponseBody
 // @Resource Auth
 // @Route /api/login/ [post]
-func (c *AuthController) Login() http.HandlerFunc {
+func (c *Controller) Login() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ResponseWithError(w, http.StatusNotImplemented, ErrServerError)
 		c.logger.Log(r, http.StatusNotImplemented, nil)
@@ -54,7 +54,7 @@ func (c *AuthController) Login() http.HandlerFunc {
 // @Failure 501 {object} ErrorResponseBody
 // @Resource Auth
 // @Route /api/login/confirm/ [post]
-func (c *AuthController) ConfirmLogin() http.HandlerFunc {
+func (c *Controller) ConfirmLogin() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ResponseWithError(w, http.StatusNotImplemented, ErrServerError)
 		c.logger.Log(r, http.StatusNotImplemented, nil)
@@ -65,7 +65,7 @@ func (c *AuthController) ConfirmLogin() http.HandlerFunc {
 // @Failure 501 {object} ErrorResponseBody
 // @Resource Auth
 // @Route /api/refresh/ [post]
-func (c *AuthController) Refresh() http.HandlerFunc {
+func (c *Controller) Refresh() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ResponseWithError(w, http.StatusNotImplemented, ErrServerError)
 		c.logger.Log(r, http.StatusNotImplemented, nil)
@@ -76,7 +76,7 @@ func (c *AuthController) Refresh() http.HandlerFunc {
 // @Failure 501 {object} ErrorResponseBody
 // @Resource Auth
 // @Route /api/revoke/ [post]
-func (c *AuthController) Revoke() http.HandlerFunc {
+func (c *Controller) Revoke() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ResponseWithError(w, http.StatusNotImplemented, ErrServerError)
 		c.logger.Log(r, http.StatusNotImplemented, nil)

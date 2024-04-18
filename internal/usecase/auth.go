@@ -1,11 +1,11 @@
 package usecase
 
-type AuthStorageInterface interface{}
+type StorageInterface interface{}
 
-type AuthUsecase struct {
-	store AuthStorageInterface
+type Usecase struct {
+	store StorageInterface
 }
 
-func NewAuthUsecase(authStorage AuthStorageInterface) *AuthUsecase {
-	return &AuthUsecase{authStorage}
+func NewUsecase(storage StorageInterface) *Usecase {
+	return &Usecase{storage}
 }

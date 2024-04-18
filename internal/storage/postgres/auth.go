@@ -4,10 +4,10 @@ import (
 	"github.com/itmosha/auth-service/pkg/postgres"
 )
 
-type AuthStoragePostgres struct {
+type StoragePostgres struct {
 	cli *postgres.PostgresClient
 }
 
-func NewAuthStoragePostgres(cli *postgres.PostgresClient) *AuthStoragePostgres {
-	return &AuthStoragePostgres{cli}
+func NewStoragePostgres(cli *postgres.PostgresClient) *StoragePostgres {
+	return &StoragePostgres{cli}
 }
