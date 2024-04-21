@@ -1,12 +1,12 @@
 package redis
 
 import (
-	"github.com/go-redis/redis"
 	"github.com/itmosha/auth-service/internal/config"
+	"github.com/redis/go-redis/v9"
 )
 
 type RedisClient struct {
-	Cache *redis.Client
+	*redis.Client
 }
 
 func NewRedisClient(cacheCfg *config.Cache) *RedisClient {

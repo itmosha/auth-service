@@ -1,8 +1,35 @@
 components:
   schemas:
+    AuthData:
+      properties:
+        created_at:
+          example: "2022-01-01T00:00:00Z"
+          format: date-time
+          type: string
+        is_registered:
+          example: false
+          type: boolean
+        phonenumber:
+          example: "9009009090"
+          type: string
+        uid:
+          example: 9c884669-0dbf-497d-b94f-cfd196278d8f
+          type: string
+        updated_at:
+          example: "2022-01-01T00:00:00Z"
+          format: date-time
+          type: string
+      type: object
     ErrorResponseBody:
       properties:
         message:
+          example: error description
+          type: string
+      type: object
+    RegisterBody:
+      properties:
+        phonenumber:
+          example: "9009009090"
           type: string
       type: object
   securitySchemes:
@@ -54,13 +81,43 @@ paths:
       - Auth
   /api/register/:
     post:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterBody'
+        required: true
       responses:
-        "501":
+        "201":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthData'
+          description: Successful registration
+        "400":
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponseBody'
-          description: ""
+          description: Invalid request body
+        "409":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseBody'
+          description: User already registered
+        "422":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseBody'
+          description: User registration not finished
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseBody'
+          description: Internal server error
       summary: Register new user.
       tags:
       - Auth

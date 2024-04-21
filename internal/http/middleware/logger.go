@@ -18,6 +18,6 @@ func LoggerMiddleware(logger *logger.Logger, next http.Handler) http.Handler {
 		if statusCode >= 400 {
 			err, _ = r.Context().Value(controller.CtxErrorKey{}).(error)
 		}
-		logger.Log(r, statusCode, err)
+		logger.LogRequest(r, statusCode, err)
 	})
 }

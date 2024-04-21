@@ -9,7 +9,7 @@ import (
 )
 
 type PostgresClient struct {
-	DB *sqlx.DB
+	*sqlx.DB
 }
 
 func NewPostgresClient(dbCfg *config.DB) (pgClient *PostgresClient, err error) {
@@ -20,8 +20,8 @@ func NewPostgresClient(dbCfg *config.DB) (pgClient *PostgresClient, err error) {
 	if err != nil {
 		return
 	}
-	pgClient.DB.SetMaxIdleConns(dbCfg.MaxIdleConns)
-	pgClient.DB.SetMaxOpenConns(dbCfg.MaxOpenConns)
-	err = pgClient.DB.Ping()
+	pgClient.SetMaxIdleConns(dbCfg.MaxIdleConns)
+	pgClient.SetMaxOpenConns(dbCfg.MaxOpenConns)
+	err = pgClient.Ping()
 	return
 }

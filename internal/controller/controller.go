@@ -3,23 +3,18 @@ package controller
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"net/http"
 )
 
-var (
-	ErrDecodeBody  = errors.New("could not decode body")
-	ErrServerError = errors.New("internal server error")
+type (
+	SuccessResponseBody interface{}
+	ErrorResponseBody   struct {
+		Message string `json:"message" example:"error description"`
+	}
+
+	CtxStatusCodeKey struct{}
+	CtxErrorKey      struct{}
 )
-
-type SuccessResponseBody interface{}
-
-type ErrorResponseBody struct {
-	Message string `json:"message"`
-}
-
-type CtxStatusCodeKey struct{}
-type CtxErrorKey struct{}
 
 func readBodyToStruct[T any](r *http.Request, out *T) (*T, error) {
 	err := json.NewDecoder(r.Body).Decode(out)

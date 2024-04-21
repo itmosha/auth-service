@@ -29,7 +29,7 @@ func NewLogger(filePath string, env config.EnvType) *Logger {
 	return &Logger{log}
 }
 
-func (l *Logger) Log(r *http.Request, status int, err error) {
+func (l *Logger) LogRequest(r *http.Request, status int, err error) {
 	requestInfo := []interface{}{
 		slog.String("method", r.Method),
 		slog.String("path", r.URL.Path),
@@ -44,4 +44,8 @@ func (l *Logger) Log(r *http.Request, status int, err error) {
 	} else {
 		l.log.Info("API request", requestInfo...)
 	}
+}
+
+func (l *Logger) LogError(op string, err error) {
+	l.log.Error(op, slog.String("error", err.Error()))
 }

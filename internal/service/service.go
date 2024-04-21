@@ -15,7 +15,8 @@ import (
 	"github.com/itmosha/auth-service/internal/controller"
 	"github.com/itmosha/auth-service/internal/http"
 	"github.com/itmosha/auth-service/internal/http/middleware"
-	storage "github.com/itmosha/auth-service/internal/storage/postgres"
+	storagePostgres "github.com/itmosha/auth-service/internal/storage/postgres"
+	storageRedis "github.com/itmosha/auth-service/internal/storage/redis"
 	"github.com/itmosha/auth-service/internal/usecase"
 	"github.com/itmosha/auth-service/pkg/clients/postgres"
 	"github.com/itmosha/auth-service/pkg/clients/redis"
@@ -28,12 +29,23 @@ func Run(cfg *config.Config) {
 		log.Fatalf("could not create postgres client: %v\n", err)
 	}
 	redisClient := redis.NewRedisClient(&cfg.Cache)
-	_ = redisClient
-
 	logger := logger.NewLogger("logs/"+cfg.HTTPServer.LogFileName, cfg.Env)
 
-	storage := storage.NewStoragePostgres(pgClient)
-	usecase := usecase.NewUsecase(storage)
+	storage := storagePostgres.NewStoragePostgres(pgClient)
+	cache := storageRedis.NewCacheRedis(redisClient)
+
+	go func() {
+		for {
+			ctx := context.Background()
+			err := storage.DeleteUnregistered(&ctx, time.Minute*30)
+			if err != nil {
+				logger.LogError("storagePostgres.DeleteUnregistered", err)
+			}
+			time.Sleep(time.Minute)
+		}
+	}()
+
+	usecase := usecase.NewUsecase(storage, cache)
 	controller := controller.NewController(usecase, logger)
 
 	router := http.NewRouter(controller)
