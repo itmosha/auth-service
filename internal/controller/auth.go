@@ -13,6 +13,7 @@ import (
 
 type UsecaseInterface interface {
 	Register(ctx *context.Context, body *entity.RegisterBody) (authData *entity.AuthData, err error)
+	ConfirmRegister(ctx *context.Context, body *entity.ConfirmRegisterBody) (tokenPair *entity.TokenPair, err error)
 }
 
 type Controller struct {
@@ -64,12 +65,41 @@ func (c *Controller) Register() http.HandlerFunc {
 }
 
 // @Title Confirm user registration.
-// @Failure 501 {object} ErrorResponseBody
+// @Descriptiomn Confirm user registration by uid.
+// @Param body body entity.ConfirmRegisterBody true "Confirm registration body"
+// @Success 200 object entity.TokenPair "Successful confirmation"
+// @Failure 400 object ErrorResponseBody "Invalid request body"
+// @Failure 409 object ErrorResponseBody "User already registered"
+// @Failure 422 object ErrorResponseBody "Wrong confirmation code provided"
+// @Failure 500 object ErrorResponseBody "Internal server error"
 // @Resource Auth
 // @Route /api/register/confirm/ [post]
 func (c *Controller) ConfirmRegister() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		ResponseWithError(w, r, http.StatusNotImplemented, nil)
+		ctx := context.Background()
+		body, err := readBodyToStruct(r, &entity.ConfirmRegisterBody{})
+		if err != nil {
+			ResponseWithError(w, r, http.StatusBadRequest, err)
+			return
+		}
+		err = c.validator.StructCtx(ctx, body)
+		if err != nil {
+			errors := err.(validator.ValidationErrors)
+			ResponseWithError(w, r, http.StatusBadRequest, errors)
+			return
+		}
+		tokenPair, err := c.uc.ConfirmRegister(&ctx, body)
+		if err != nil {
+			if errors.Is(err, usecase.ErrAlreadyRegistered) {
+				ResponseWithError(w, r, http.StatusConflict, err)
+			} else if errors.Is(err, usecase.ErrWrongCodeProvided) {
+				ResponseWithError(w, r, http.StatusUnprocessableEntity, err)
+			} else {
+				ResponseWithError(w, r, http.StatusInternalServerError, err)
+			}
+			return
+		}
+		ResponseWithSuccess(w, r, http.StatusOK, tokenPair)
 	}
 }
 

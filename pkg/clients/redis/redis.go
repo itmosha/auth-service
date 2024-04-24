@@ -12,7 +12,7 @@ type RedisClient struct {
 func NewRedisClient(cacheCfg *config.Cache) *RedisClient {
 	return &RedisClient{
 		redis.NewClient(&redis.Options{
-			Addr:     cacheCfg.Host,
+			Addr:     cacheCfg.Host + ":" + cacheCfg.Port,
 			Password: cacheCfg.Pass,
 		}),
 	}

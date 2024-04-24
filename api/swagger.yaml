@@ -20,6 +20,15 @@ components:
           format: date-time
           type: string
       type: object
+    ConfirmRegisterBody:
+      properties:
+        code:
+          example: "1234"
+          type: string
+        uid:
+          example: 9c884669-0dbf-497d-b94f-cfd196278d8f
+          type: string
+      type: object
     ErrorResponseBody:
       properties:
         message:
@@ -30,6 +39,13 @@ components:
       properties:
         phonenumber:
           example: "9009009090"
+          type: string
+      type: object
+    TokenPair:
+      properties:
+        access_token:
+          type: string
+        refresh_token:
           type: string
       type: object
   securitySchemes:
@@ -123,13 +139,43 @@ paths:
       - Auth
   /api/register/confirm/:
     post:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConfirmRegisterBody'
+        required: true
       responses:
-        "501":
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenPair'
+          description: Successful confirmation
+        "400":
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponseBody'
-          description: ""
+          description: Invalid request body
+        "409":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseBody'
+          description: User already registered
+        "422":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseBody'
+          description: Wrong confirmation code provided
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseBody'
+          description: Internal server error
       summary: Confirm user registration.
       tags:
       - Auth

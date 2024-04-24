@@ -21,6 +21,7 @@ import (
 	"github.com/itmosha/auth-service/pkg/clients/postgres"
 	"github.com/itmosha/auth-service/pkg/clients/redis"
 	"github.com/itmosha/auth-service/pkg/logger"
+	"github.com/itmosha/simplejwt"
 )
 
 func Run(cfg *config.Config) {
@@ -30,6 +31,7 @@ func Run(cfg *config.Config) {
 	}
 	redisClient := redis.NewRedisClient(&cfg.Cache)
 	logger := logger.NewLogger("logs/"+cfg.HTTPServer.LogFileName, cfg.Env)
+	jwtClient := simplejwt.NewJWTClient([]byte(cfg.JWTSecret), nil)
 
 	storage := storagePostgres.NewStoragePostgres(pgClient)
 	cache := storageRedis.NewCacheRedis(redisClient)
@@ -45,7 +47,7 @@ func Run(cfg *config.Config) {
 		}
 	}()
 
-	usecase := usecase.NewUsecase(storage, cache)
+	usecase := usecase.NewUsecase(storage, cache, jwtClient)
 	controller := controller.NewController(usecase, logger)
 
 	router := http.NewRouter(controller)

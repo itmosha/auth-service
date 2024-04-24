@@ -22,6 +22,7 @@ type (
 		DB         `yaml:"db"`
 		Cache      `yaml:"cache"`
 		HTTPServer `yaml:"http_server"`
+		JWTSecret  string `env:"JWT_SECRET"`
 	}
 	DB struct {
 		Host         string `env:"POSTGRES_HOST" env-default:"auth-postgres"`
@@ -40,6 +41,7 @@ type (
 	Cache struct {
 		Host string `yaml:"host" env-default:"auth-redis"`
 		Pass string `env:"REDIS_PASSWORD"`
+		Port string `yaml:"port" env-default:"6379"`
 	}
 )
 
@@ -60,6 +62,7 @@ func NewConfig() *Config {
 	cfg.DB.User = readEnvVar("POSTGRES_USER")
 	cfg.DB.Pass = readEnvVar("POSTGRES_PASSWORD")
 	cfg.Cache.Pass = readEnvVar("REDIS_PASSWORD")
+	cfg.JWTSecret = readEnvVar("JWT_SECRET")
 	return &cfg
 }
 

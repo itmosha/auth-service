@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"time"
 
+	common "github.com/itmosha/auth-service/internal/storage"
 	"github.com/itmosha/auth-service/pkg/clients/redis"
 	_redis "github.com/redis/go-redis/v9"
 )
@@ -25,7 +26,7 @@ func (c *CacheRedis) SetRegisterCode(ctx *context.Context, uid, code string) (er
 func (c *CacheRedis) GetRegisterCode(ctx *context.Context, uid string) (code string, err error) {
 	code, err = c.cli.Get(*ctx, fmt.Sprintf("register:%s", uid)).Result()
 	if errors.Is(err, _redis.Nil) {
-		err = ErrRegisterCodeNotExist
+		err = common.ErrRegisterCodeNotExist
 	}
 	return
 }
