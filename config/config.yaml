@@ -1,8 +1,14 @@
 env: "local"
 db:
+  host: "auth-postgres"
+  name: "auth"
   max_open_conns: 5
   max_idle_conns: 10
 http_server:
+  run_port: 8080
   timeout: 5s
   idle_timeout: 60s
   log_file_name: "service.log"
+cache:
+  host: "auth-redis"
+  port: 6379

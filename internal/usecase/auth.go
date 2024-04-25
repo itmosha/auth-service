@@ -82,8 +82,9 @@ func (uc *Usecase) ConfirmRegister(ctx *context.Context, body *entity.ConfirmReg
 		return
 	}
 	_ = uc.cache.DelRegisterCode(ctx, authData.Uid)
-	tokenClaims := map[string]interface{}{"uid": authData.Uid, "phonenumber": authData.Phonenumber}
-	tp, err := uc.jwtClient.CreateTokenPair(tokenClaims)
+	atClaims := map[string]interface{}{"uid": authData.Uid, "phonenumber": authData.Phonenumber}
+	rtClaims := map[string]interface{}{"uid": authData.Uid}
+	tp, err := uc.jwtClient.CreateTokenPair(atClaims, rtClaims)
 	if err != nil {
 		return
 	}

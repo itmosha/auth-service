@@ -22,6 +22,8 @@ github.com/ilyakaznacheev/cleanenv v1.5.0 h1:0VNZXggJE2OYdXE87bfSSwGxeiGt9moSR2l
 github.com/ilyakaznacheev/cleanenv v1.5.0/go.mod h1:a5aDzaJrLCQZsazHol1w8InnDcOX0OColm64SlIi6gk=
 github.com/itmosha/simplejwt v1.0.1 h1:Bv9NP8CMSODX/KY0L4TjaVf8vfZPEjYtrjGu9xE3gd0=
 github.com/itmosha/simplejwt v1.0.1/go.mod h1:Lwx60t95hSoJor90B3sNqMbVKEdWi4bY0gZLE2VCdcA=
+github.com/itmosha/simplejwt v1.0.2 h1:ZM93w9iu+KzTdu8/C34/l+ELqqXloF81SXBV+apu0tU=
+github.com/itmosha/simplejwt v1.0.2/go.mod h1:Lwx60t95hSoJor90B3sNqMbVKEdWi4bY0gZLE2VCdcA=
 github.com/jmoiron/sqlx v1.3.5 h1:vFFPA71p1o5gAeqtEAwLU4dnX2napprKtHr7PYIcN3g=
 github.com/jmoiron/sqlx v1.3.5/go.mod h1:nRVWtLre0KfCLJvgxzCsLVMogSvQ1zNJtpYr2Ccp0mQ=
 github.com/joho/godotenv v1.5.1 h1:7eLL/+HRGLY0ldzfGMeQkb7vMd0as4CfYvUVzLqw0N0=

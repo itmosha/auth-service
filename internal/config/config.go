@@ -25,15 +25,15 @@ type (
 		JWTSecret  string `env:"JWT_SECRET"`
 	}
 	DB struct {
-		Host         string `env:"POSTGRES_HOST" env-default:"auth-postgres"`
-		Name         string `env:"POSTGRES_NAME" env-default:"auth"`
+		Host         string `yaml:"host" env-default:"auth-postgres"`
+		Name         string `yaml:"name" env-default:"auth"`
 		User         string `env:"POSTGRES_USER"`
 		Pass         string `env:"POSTGRES_PASSWORD"`
 		MaxOpenConns int    `yaml:"max_open_conns" env-default:"5"`
 		MaxIdleConns int    `yaml:"max_idle_conns" env-default:"10"`
 	}
 	HTTPServer struct {
-		RunPort     string        `ENV:"RUN_PORT" env-default:"8080"`
+		RunPort     string        `yaml:"run_port" env-default:"8080"`
 		Timeout     time.Duration `yaml:"timeout" env-default:"5s"`
 		IdleTimeout time.Duration `yaml:"idle_timeout" env-default:"60s"`
 		LogFileName string        `yaml:"log_file_name" env-default:"service.log"`
