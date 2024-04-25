@@ -1,4 +1,3 @@
-
 SET TIME ZONE 'Europe/Moscow';
 
 CREATE TABLE IF NOT EXISTS "phonenumbers" (

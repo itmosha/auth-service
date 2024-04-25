@@ -2,47 +2,143 @@ package controller
 
 import (
 	"context"
-	"encoding/json"
+	"errors"
 	"net/http"
+
+	"github.com/go-playground/validator/v10"
+	"github.com/itmosha/auth-service/internal/entity"
+	"github.com/itmosha/auth-service/internal/usecase"
+	"github.com/itmosha/auth-service/pkg/logger"
 )
 
-type (
-	SuccessResponseBody interface{}
-	ErrorResponseBody   struct {
-		Message string `json:"message" example:"error description"`
-	}
-
-	CtxStatusCodeKey struct{}
-	CtxErrorKey      struct{}
-)
-
-func readBodyToStruct[T any](r *http.Request, out *T) (*T, error) {
-	err := json.NewDecoder(r.Body).Decode(out)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
+type UsecaseInterface interface {
+	Register(ctx *context.Context, body *entity.RegisterBody) (userMeta *entity.UserMeta, err error)
+	ConfirmRegister(ctx *context.Context, body *entity.ConfirmRegisterBody) (tokenPair *entity.TokenPair, err error)
 }
 
-func ResponseWithSuccess(w http.ResponseWriter, r *http.Request, statusCode int, body interface{}) {
-	w.WriteHeader(statusCode)
-	if body != nil {
-		json.NewEncoder(w).Encode(body)
-	}
-	ctx := r.Context()
-	ctx = context.WithValue(ctx, CtxStatusCodeKey{}, statusCode)
-	req := r.WithContext(ctx)
-	*r = *req
+type Controller struct {
+	uc        UsecaseInterface
+	validator *validator.Validate
 }
 
-func ResponseWithError(w http.ResponseWriter, r *http.Request, statusCode int, err error) {
-	w.WriteHeader(statusCode)
-	if err != nil {
-		json.NewEncoder(w).Encode(ErrorResponseBody{Message: err.Error()})
+func NewController(uc UsecaseInterface, logger *logger.Logger) *Controller {
+	return &Controller{uc, validator.New()}
+}
+
+// @Title Register new user.
+// @Descriptiomn Register a new user using a phonenumber.
+// @Param body body entity.RegisterBody true "Registration body"
+// @Success 201 object entity.UserMeta "Successful registration"
+// @Failure 400 object errorResponseBody "Invalid request body"
+// @Failure 409 object errorResponseBody "User already registered"
+// @Failure 422 object errorResponseBody "User registration not finished"
+// @Failure 500 object errorResponseBody "Internal server error"
+// @Resource Auth
+// @Route /api/register/ [post]
+func (c *Controller) Register() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		ctx := context.Background()
+		body, err := readBodyToStruct(r, &entity.RegisterBody{})
+		if err != nil {
+			responseWithError(w, r, http.StatusBadRequest, err)
+			return
+		}
+		err = c.validator.StructCtx(ctx, body)
+		if err != nil {
+			errors := err.(validator.ValidationErrors)
+			responseWithError(w, r, http.StatusBadRequest, errors)
+			return
+		}
+		userMeta, err := c.uc.Register(&ctx, body)
+		if err != nil {
+			if errors.Is(err, usecase.ErrAlreadyRegistered) {
+				responseWithError(w, r, http.StatusConflict, err)
+			} else if errors.Is(err, usecase.ErrRegistrationNotFinished) {
+				responseWithError(w, r, http.StatusUnprocessableEntity, err)
+			} else {
+				responseWithError(w, r, http.StatusInternalServerError, err)
+			}
+			return
+		}
+		responseWithSuccess(w, r, http.StatusCreated, userMeta)
 	}
-	ctx := r.Context()
-	ctx = context.WithValue(ctx, CtxStatusCodeKey{}, statusCode)
-	ctx = context.WithValue(ctx, CtxErrorKey{}, err)
-	req := r.WithContext(ctx)
-	*r = *req
+}
+
+// @Title Confirm user registration.
+// @Descriptiomn Confirm user registration by uid.
+// @Param body body entity.ConfirmRegisterBody true "Confirm registration body"
+// @Success 200 object entity.TokenPair "Successful confirmation"
+// @Failure 400 object errorResponseBody "Invalid request body"
+// @Failure 409 object errorResponseBody "User already registered"
+// @Failure 422 object errorResponseBody "Wrong confirmation code provided"
+// @Failure 500 object errorResponseBody "Internal server error"
+// @Resource Auth
+// @Route /api/register/confirm/ [post]
+func (c *Controller) ConfirmRegister() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		ctx := context.Background()
+		body, err := readBodyToStruct(r, &entity.ConfirmRegisterBody{})
+		if err != nil {
+			responseWithError(w, r, http.StatusBadRequest, err)
+			return
+		}
+		err = c.validator.StructCtx(ctx, body)
+		if err != nil {
+			errors := err.(validator.ValidationErrors)
+			responseWithError(w, r, http.StatusBadRequest, errors)
+			return
+		}
+		tokenPair, err := c.uc.ConfirmRegister(&ctx, body)
+		if err != nil {
+			if errors.Is(err, usecase.ErrAlreadyRegistered) {
+				responseWithError(w, r, http.StatusConflict, err)
+			} else if errors.Is(err, usecase.ErrWrongCodeProvided) {
+				responseWithError(w, r, http.StatusUnprocessableEntity, err)
+			} else {
+				responseWithError(w, r, http.StatusInternalServerError, err)
+			}
+			return
+		}
+		responseWithSuccess(w, r, http.StatusOK, tokenPair)
+	}
+}
+
+// @Title Log in user.
+// @Failure 501 {object} errorResponseBody
+// @Resource Auth
+// @Route /api/login/ [post]
+func (c *Controller) Login() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		responseWithError(w, r, http.StatusNotImplemented, nil)
+	}
+}
+
+// @Title Confirm user login.
+// @Failure 501 {object} errorResponseBody
+// @Resource Auth
+// @Route /api/login/confirm/ [post]
+func (c *Controller) ConfirmLogin() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		responseWithError(w, r, http.StatusNotImplemented, nil)
+	}
+}
+
+// @Title Refresh token pair.
+// @Failure 501 {object} errorResponseBody
+// @Resource Auth
+// @Route /api/refresh/ [post]
+func (c *Controller) Refresh() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		responseWithError(w, r, http.StatusNotImplemented, nil)
+	}
+}
+
+// @Title Revoke token pair.
+// @Failure 501 {object} errorResponseBody
+// @Resource Auth
+// @Route /api/revoke/ [post]
+func (c *Controller) Revoke() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		responseWithError(w, r, http.StatusNotImplemented, nil)
+	}
 }

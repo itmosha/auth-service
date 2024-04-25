@@ -1,6 +1,30 @@
 components:
   schemas:
-    AuthData:
+    ConfirmRegisterBody:
+      properties:
+        code:
+          example: "1234"
+          type: string
+        uid:
+          example: 9c884669-0dbf-497d-b94f-cfd196278d8f
+          type: string
+      type: object
+    RegisterBody:
+      properties:
+        phonenumber:
+          example: "9009009090"
+          type: string
+      type: object
+    TokenPair:
+      properties:
+        access_token:
+          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3MTQwNjgxMTcsImlhdCI6MTcxNDA2NzUxNywicGhvbmVudW1iZXIiOiI5MDA5MDA5MDkwIiwidWlkIjoiMTBiNDNmOTItZWRhMC00ZWFhLTkwNTktNjVkMWFkYzdhNzM3In0.9rntx_CFGxCMByOlZa0zFLhIW4LNgQpruKX6wNSKXUo
+          type: string
+        refresh_token:
+          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3MTQwNzExMTcsImlhdCI6MTcxNDA2NzUxNywidWlkIjoiMTBiNDNmOTItZWRhMC00ZWFhLTkwNTktNjVkMWFkYzdhNzM3In0.2UVtNZ-lKub9ZrlDiwf0tD9Wx2e73QhdKeRxbtFwTE4
+          type: string
+      type: object
+    UserMeta:
       properties:
         created_at:
           example: "2022-01-01T00:00:00Z"
@@ -20,32 +44,10 @@ components:
           format: date-time
           type: string
       type: object
-    ConfirmRegisterBody:
-      properties:
-        code:
-          example: "1234"
-          type: string
-        uid:
-          example: 9c884669-0dbf-497d-b94f-cfd196278d8f
-          type: string
-      type: object
-    ErrorResponseBody:
+    errorResponseBody:
       properties:
         message:
           example: error description
-          type: string
-      type: object
-    RegisterBody:
-      properties:
-        phonenumber:
-          example: "9009009090"
-          type: string
-      type: object
-    TokenPair:
-      properties:
-        access_token:
-          type: string
-        refresh_token:
           type: string
       type: object
   securitySchemes:
@@ -66,7 +68,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponseBody'
+                $ref: '#/components/schemas/errorResponseBody'
           description: ""
       summary: Log in user.
       tags:
@@ -78,7 +80,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponseBody'
+                $ref: '#/components/schemas/errorResponseBody'
           description: ""
       summary: Confirm user login.
       tags:
@@ -90,7 +92,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponseBody'
+                $ref: '#/components/schemas/errorResponseBody'
           description: ""
       summary: Refresh token pair.
       tags:
@@ -108,31 +110,31 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/AuthData'
+                $ref: '#/components/schemas/UserMeta'
           description: Successful registration
         "400":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponseBody'
+                $ref: '#/components/schemas/errorResponseBody'
           description: Invalid request body
         "409":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponseBody'
+                $ref: '#/components/schemas/errorResponseBody'
           description: User already registered
         "422":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponseBody'
+                $ref: '#/components/schemas/errorResponseBody'
           description: User registration not finished
         "500":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponseBody'
+                $ref: '#/components/schemas/errorResponseBody'
           description: Internal server error
       summary: Register new user.
       tags:
@@ -156,25 +158,25 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponseBody'
+                $ref: '#/components/schemas/errorResponseBody'
           description: Invalid request body
         "409":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponseBody'
+                $ref: '#/components/schemas/errorResponseBody'
           description: User already registered
         "422":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponseBody'
+                $ref: '#/components/schemas/errorResponseBody'
           description: Wrong confirmation code provided
         "500":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponseBody'
+                $ref: '#/components/schemas/errorResponseBody'
           description: Internal server error
       summary: Confirm user registration.
       tags:
@@ -186,7 +188,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponseBody'
+                $ref: '#/components/schemas/errorResponseBody'
           description: ""
       summary: Revoke token pair.
       tags:

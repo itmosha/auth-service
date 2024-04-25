@@ -1,18 +1,109 @@
 package usecase
 
 import (
+	"context"
 	"errors"
 	"fmt"
-	"math/rand"
+	"time"
+
+	"github.com/itmosha/auth-service/internal/entity"
+	"github.com/itmosha/auth-service/internal/storage"
+	"github.com/itmosha/simplejwt"
 )
 
-var (
-	ErrRegistrationNotFinished = errors.New("this user did not finish registration")
-	ErrAlreadyRegistered       = errors.New("this user is already registered")
-	ErrWrongCodeProvided       = errors.New("wrong code provided")
-)
+type UsersMetaStorageInterface interface {
+	Insert(ctx *context.Context, insertedUserMeta *entity.UserMeta) (createdUserMeta *entity.UserMeta, err error)
+	SelectByPhonenumber(ctx *context.Context, phonenumber string) (userMeta *entity.UserMeta, err error)
+	SelectByUid(ctx *context.Context, uid string) (userMeta *entity.UserMeta, err error)
+	UpdateFields(ctx *context.Context, uid string, fields map[string]interface{}) (err error)
+	DeleteUnregistered(ctx *context.Context, delta time.Duration) (err error)
+}
 
-func generateCode() (code string) {
-	code = fmt.Sprintf("%04d", rand.Intn(10000))
+type SessionsStorageInterface interface {
+	Insert(ctx *context.Context, insertedSession *entity.Session) (createdSession *entity.Session, err error)
+}
+
+type CacheInterface interface {
+	SetRegisterCode(ctx *context.Context, uid, code string) (err error)
+	GetRegisterCode(ctx *context.Context, uid string) (code string, err error)
+	DelRegisterCode(ctx *context.Context, uid string) (err error)
+}
+
+type Usecase struct {
+	usersMetaStore UsersMetaStorageInterface
+	sessionsStore  SessionsStorageInterface
+	cache          CacheInterface
+	jwtClient      *simplejwt.JWTClient
+}
+
+func NewUsecase(usersMetaStore UsersMetaStorageInterface, sessionsStore SessionsStorageInterface, cache CacheInterface, jwtClient *simplejwt.JWTClient) *Usecase {
+	return &Usecase{usersMetaStore, sessionsStore, cache, jwtClient}
+}
+
+func (uc *Usecase) Register(ctx *context.Context, body *entity.RegisterBody) (userMeta *entity.UserMeta, err error) {
+	userMeta, err = uc.usersMetaStore.SelectByPhonenumber(ctx, body.Phonenumber)
+	if err == nil {
+		if !userMeta.IsRegistered {
+			err = ErrRegistrationNotFinished
+		} else {
+			err = ErrAlreadyRegistered
+		}
+		return
+	} else if !errors.Is(err, storage.ErrUserMetaNotFound) {
+		return
+	}
+	userMeta, err = uc.usersMetaStore.Insert(ctx, &entity.UserMeta{Phonenumber: body.Phonenumber})
+	if err != nil {
+		return
+	}
+	code := generateCode()
+	fmt.Printf("Code for uid %s: %s\n", userMeta.Uid, code)
+	err = uc.cache.SetRegisterCode(ctx, userMeta.Uid, code)
+	return
+}
+
+func (uc *Usecase) ConfirmRegister(ctx *context.Context, body *entity.ConfirmRegisterBody) (tokenPair *entity.TokenPair, err error) {
+	userMeta, err := uc.usersMetaStore.SelectByUid(ctx, body.Uid)
+	if err != nil {
+		return
+	} else if userMeta.IsRegistered {
+		err = ErrAlreadyRegistered
+		return
+	}
+
+	code, err := uc.cache.GetRegisterCode(ctx, userMeta.Uid)
+	if errors.Is(err, storage.ErrRegisterCodeNotExist) {
+		err = ErrWrongCodeProvided
+		return
+	} else if err != nil {
+		return
+	}
+	if body.Code != code {
+		err = ErrWrongCodeProvided
+		return
+	}
+	err = uc.usersMetaStore.UpdateFields(ctx, userMeta.Uid, map[string]interface{}{"is_registered": true})
+	if err != nil {
+		return
+	}
+	_ = uc.cache.DelRegisterCode(ctx, userMeta.Uid)
+	atClaims := map[string]interface{}{"uid": userMeta.Uid, "phonenumber": userMeta.Phonenumber}
+	rtClaims := map[string]interface{}{"uid": userMeta.Uid}
+	tp, err := uc.jwtClient.CreateTokenPair(atClaims, rtClaims)
+	if err != nil {
+		return
+	}
+	tokenPair = &entity.TokenPair{
+		AccessToken:  tp.AccessToken.Token,
+		RefreshToken: tp.RefreshToken.Token,
+	}
+	_, err = uc.sessionsStore.Insert(ctx,
+		&entity.Session{
+			UserUid:   userMeta.Uid,
+			Token:     tp.RefreshToken.Token,
+			ExpiresAt: tp.RefreshToken.Exp,
+			IssuedAt:  tp.RefreshToken.Iat,
+		},
+	)
 	return
 }

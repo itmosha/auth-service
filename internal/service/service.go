@@ -33,13 +33,14 @@ func Run(cfg *config.Config) {
 	logger := logger.NewLogger("logs/"+cfg.HTTPServer.LogFileName, cfg.Env)
 	jwtClient := simplejwt.NewJWTClient([]byte(cfg.JWTSecret), nil)
 
-	storage := storagePostgres.NewStoragePostgres(pgClient)
+	usersMetaStorage := storagePostgres.NewUsersMetaStoragePostgres(pgClient)
+	sessionsStorage := storagePostgres.NewSessionsStoragePostgres(pgClient)
 	cache := storageRedis.NewCacheRedis(redisClient)
 
 	go func() {
 		for {
 			ctx := context.Background()
-			err := storage.DeleteUnregistered(&ctx, time.Minute*30)
+			err := usersMetaStorage.DeleteUnregistered(&ctx, time.Minute*30)
 			if err != nil {
 				logger.LogError("storagePostgres.DeleteUnregistered", err)
 			}
@@ -47,7 +48,7 @@ func Run(cfg *config.Config) {
 		}
 	}()
 
-	usecase := usecase.NewUsecase(storage, cache, jwtClient)
+	usecase := usecase.NewUsecase(usersMetaStorage, sessionsStorage, cache, jwtClient)
 	controller := controller.NewController(usecase, logger)
 
 	router := http.NewRouter(controller)
