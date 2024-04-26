@@ -14,7 +14,6 @@ import (
 	"github.com/itmosha/auth-service/internal/config"
 	"github.com/itmosha/auth-service/internal/controller"
 	"github.com/itmosha/auth-service/internal/http"
-	"github.com/itmosha/auth-service/internal/http/middleware"
 	storagePostgres "github.com/itmosha/auth-service/internal/storage/postgres"
 	storageRedis "github.com/itmosha/auth-service/internal/storage/redis"
 	"github.com/itmosha/auth-service/internal/usecase"
@@ -54,7 +53,7 @@ func Run(cfg *config.Config) {
 	router := http.NewRouter(controller)
 
 	server := &HTTP.Server{
-		Handler:      middleware.LoggerMiddleware(logger, router),
+		Handler:      router,
 		Addr:         fmt.Sprintf(":%s", cfg.HTTPServer.RunPort),
 		WriteTimeout: cfg.HTTPServer.Timeout,
 		ReadTimeout:  cfg.HTTPServer.Timeout,

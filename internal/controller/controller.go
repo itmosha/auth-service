@@ -2,6 +2,7 @@ package controller
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"net/http"
 
@@ -21,10 +22,11 @@ type UsecaseInterface interface {
 type Controller struct {
 	uc        UsecaseInterface
 	validator *validator.Validate
+	logger    *logger.Logger
 }
 
 func NewController(uc UsecaseInterface, logger *logger.Logger) *Controller {
-	return &Controller{uc, validator.New()}
+	return &Controller{uc: uc, validator: validator.New(), logger: logger}
 }
 
 // @Title Register new user.
@@ -42,27 +44,27 @@ func (c *Controller) Register() http.HandlerFunc {
 		ctx := context.Background()
 		body, err := readBodyToStruct(r, &entity.RegisterBody{})
 		if err != nil {
-			responseWithError(w, r, http.StatusBadRequest, err)
+			c.responseWithError(w, r, http.StatusBadRequest, err)
 			return
 		}
 		err = c.validator.StructCtx(ctx, body)
 		if err != nil {
 			errors := err.(validator.ValidationErrors)
-			responseWithError(w, r, http.StatusBadRequest, errors)
+			c.responseWithError(w, r, http.StatusBadRequest, errors)
 			return
 		}
 		userMeta, err := c.uc.Register(&ctx, body)
 		if err != nil {
 			if errors.Is(err, usecase.ErrAlreadyRegistered) {
-				responseWithError(w, r, http.StatusConflict, err)
+				c.responseWithError(w, r, http.StatusConflict, err)
 			} else if errors.Is(err, usecase.ErrRegistrationNotFinished) {
-				responseWithError(w, r, http.StatusUnprocessableEntity, err)
+				c.responseWithError(w, r, http.StatusUnprocessableEntity, err)
 			} else {
-				responseWithError(w, r, http.StatusInternalServerError, err)
+				c.responseWithError(w, r, http.StatusInternalServerError, err)
 			}
 			return
 		}
-		responseWithSuccess(w, r, http.StatusCreated, userMeta)
+		c.responseWithSuccess(w, r, http.StatusCreated, userMeta)
 	}
 }
 
@@ -81,29 +83,29 @@ func (c *Controller) ConfirmRegister() http.HandlerFunc {
 		ctx := context.Background()
 		body, err := readBodyToStruct(r, &entity.ConfirmRegisterBody{})
 		if err != nil {
-			responseWithError(w, r, http.StatusBadRequest, err)
+			c.responseWithError(w, r, http.StatusBadRequest, err)
 			return
 		}
 		err = c.validator.StructCtx(ctx, body)
 		if err != nil {
 			errors := err.(validator.ValidationErrors)
-			responseWithError(w, r, http.StatusBadRequest, errors)
+			c.responseWithError(w, r, http.StatusBadRequest, errors)
 			return
 		}
 		tokenPair, err := c.uc.ConfirmRegister(&ctx, body)
 		if err != nil {
 			if errors.Is(err, usecase.ErrAlreadyRegistered) {
-				responseWithError(w, r, http.StatusConflict, err)
+				c.responseWithError(w, r, http.StatusConflict, err)
 			} else if errors.Is(err, storage.ErrUserMetaNotFound) {
-				responseWithError(w, r, http.StatusBadRequest, err)
+				c.responseWithError(w, r, http.StatusBadRequest, err)
 			} else if errors.Is(err, usecase.ErrWrongCodeProvided) {
-				responseWithError(w, r, http.StatusUnprocessableEntity, err)
+				c.responseWithError(w, r, http.StatusUnprocessableEntity, err)
 			} else {
-				responseWithError(w, r, http.StatusInternalServerError, err)
+				c.responseWithError(w, r, http.StatusInternalServerError, err)
 			}
 			return
 		}
-		responseWithSuccess(w, r, http.StatusOK, tokenPair)
+		c.responseWithSuccess(w, r, http.StatusOK, tokenPair)
 	}
 }
 
@@ -121,27 +123,27 @@ func (c *Controller) Login() http.HandlerFunc {
 		ctx := context.Background()
 		body, err := readBodyToStruct(r, &entity.LoginBody{})
 		if err != nil {
-			responseWithError(w, r, http.StatusBadRequest, err)
+			c.responseWithError(w, r, http.StatusBadRequest, err)
 			return
 		}
 		err = c.validator.StructCtx(ctx, body)
 		if err != nil {
 			errors := err.(validator.ValidationErrors)
-			responseWithError(w, r, http.StatusBadRequest, errors)
+			c.responseWithError(w, r, http.StatusBadRequest, errors)
 			return
 		}
 		err = c.uc.Login(&ctx, body)
 		if err != nil {
 			if errors.Is(err, usecase.ErrRegistrationNotFinished) {
-				responseWithError(w, r, http.StatusUnprocessableEntity, err)
+				c.responseWithError(w, r, http.StatusUnprocessableEntity, err)
 			} else if errors.Is(err, storage.ErrUserMetaNotFound) {
-				responseWithError(w, r, http.StatusBadRequest, err)
+				c.responseWithError(w, r, http.StatusBadRequest, err)
 			} else {
-				responseWithError(w, r, http.StatusInternalServerError, err)
+				c.responseWithError(w, r, http.StatusInternalServerError, err)
 			}
 			return
 		}
-		responseWithSuccess(w, r, http.StatusNoContent, nil)
+		c.responseWithSuccess(w, r, http.StatusNoContent, nil)
 	}
 }
 
@@ -151,7 +153,7 @@ func (c *Controller) Login() http.HandlerFunc {
 // @Route /api/login/confirm/ [post]
 func (c *Controller) ConfirmLogin() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		responseWithError(w, r, http.StatusNotImplemented, nil)
+		c.responseWithError(w, r, http.StatusNotImplemented, ErrNotImplemented)
 	}
 }
 
@@ -161,7 +163,7 @@ func (c *Controller) ConfirmLogin() http.HandlerFunc {
 // @Route /api/refresh/ [post]
 func (c *Controller) Refresh() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		responseWithError(w, r, http.StatusNotImplemented, nil)
+		c.responseWithError(w, r, http.StatusNotImplemented, ErrNotImplemented)
 	}
 }
 
@@ -171,6 +173,24 @@ func (c *Controller) Refresh() http.HandlerFunc {
 // @Route /api/revoke/ [post]
 func (c *Controller) Revoke() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		responseWithError(w, r, http.StatusNotImplemented, nil)
+		c.responseWithError(w, r, http.StatusNotImplemented, ErrNotImplemented)
 	}
+}
+
+func (c *Controller) responseWithSuccess(w http.ResponseWriter, r *http.Request, statusCode int, body interface{}) {
+	w.WriteHeader(statusCode)
+	if body != nil {
+		json.NewEncoder(w).Encode(body)
+	}
+	c.logger.LogRequest(r, statusCode, nil)
+}
+
+func (c *Controller) responseWithError(w http.ResponseWriter, r *http.Request, statusCode int, err error) {
+	w.WriteHeader(statusCode)
+	if statusCode >= 500 {
+		json.NewEncoder(w).Encode(errorResponseBody{Message: ErrServerError.Error()})
+	} else {
+		json.NewEncoder(w).Encode(errorResponseBody{Message: err.Error()})
+	}
+	c.logger.LogRequest(r, statusCode, err)
 }
