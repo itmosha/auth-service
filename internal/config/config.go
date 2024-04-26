@@ -47,7 +47,7 @@ type (
 
 func NewConfig() *Config {
 	cfg := Config{}
-	err := cleanenv.ReadConfig("./config/config.yaml", &cfg)
+	err := cleanenv.ReadConfig("./configs/config.yaml", &cfg)
 	if err != nil {
 		log.Fatalf("could not read config file: %v", err)
 	}

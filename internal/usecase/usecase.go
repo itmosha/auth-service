@@ -27,6 +27,9 @@ type CacheInterface interface {
 	SetRegisterCode(ctx *context.Context, uid, code string) (err error)
 	GetRegisterCode(ctx *context.Context, uid string) (code string, err error)
 	DelRegisterCode(ctx *context.Context, uid string) (err error)
+	SetLoginCode(ctx *context.Context, uid, code string) (err error)
+	GetLoginCode(ctx *context.Context, uid string) (code string, err error)
+	DelLoginCode(ctx *context.Context, uid string) (err error)
 }
 
 type Usecase struct {
@@ -57,7 +60,7 @@ func (uc *Usecase) Register(ctx *context.Context, body *entity.RegisterBody) (us
 		return
 	}
 	code := generateCode()
-	fmt.Printf("Code for uid %s: %s\n", userMeta.Uid, code)
+	fmt.Printf("Register code for uid %s: %s\n", userMeta.Uid, code)
 	err = uc.cache.SetRegisterCode(ctx, userMeta.Uid, code)
 	return
 }
@@ -105,5 +108,19 @@ func (uc *Usecase) ConfirmRegister(ctx *context.Context, body *entity.ConfirmReg
 			IssuedAt:  tp.RefreshToken.Iat,
 		},
 	)
+	return
+}
+
+func (uc *Usecase) Login(ctx *context.Context, body *entity.LoginBody) (err error) {
+	userMeta, err := uc.usersMetaStore.SelectByPhonenumber(ctx, body.Phonenumber)
+	if err != nil {
+		return
+	} else if !userMeta.IsRegistered {
+		err = ErrRegistrationNotFinished
+		return
+	}
+	code := generateCode()
+	fmt.Printf("Login code for uid %s: %s\n", userMeta.Uid, code)
+	err = uc.cache.SetLoginCode(ctx, userMeta.Uid, code)
 	return
 }

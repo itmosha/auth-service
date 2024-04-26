@@ -53,7 +53,7 @@ services:
     container_name: auth-service
     build:
       context: ..
-      dockerfile: ./config/dockerfiles/service.Dockerfile
+      dockerfile: ./configs/dockerfiles/service.Dockerfile
       target: runner
     depends_on: 
       postgres:
@@ -71,7 +71,7 @@ services:
     container_name: auth-swagger-generator
     build:
       context: ..
-      dockerfile: ./config/dockerfiles/swagger_generator.Dockerfile
+      dockerfile: ./configs/dockerfiles/swagger_generator.Dockerfile
     volumes:
       - ../api:/app/api
     depends_on:

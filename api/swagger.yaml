@@ -9,6 +9,12 @@ components:
           example: 9c884669-0dbf-497d-b94f-cfd196278d8f
           type: string
       type: object
+    LoginBody:
+      properties:
+        phonenumber:
+          example: "9009009090"
+          type: string
+      type: object
     RegisterBody:
       properties:
         phonenumber:
@@ -63,14 +69,34 @@ openapi: 3.0.0
 paths:
   /api/login/:
     post:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginBody'
+        required: true
       responses:
-        "501":
+        "204":
+          description: Successful confirmation, no content in response body
+        "400":
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/errorResponseBody'
-          description: ""
-      summary: Log in user.
+          description: Invalid request body or user does not exist
+        "422":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/errorResponseBody'
+          description: User registration not finished
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/errorResponseBody'
+          description: Internal server error
+      summary: Log in.
       tags:
       - Auth
   /api/login/confirm/:
@@ -111,7 +137,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/UserMeta'
-          description: Successful registration
+          description: Successful registration, user meta in response body
         "400":
           content:
             application/json:
@@ -153,13 +179,13 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/TokenPair'
-          description: Successful confirmation
+          description: Successful confirmation, token pair in response body
         "400":
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/errorResponseBody'
-          description: Invalid request body
+          description: Invalid request body or user does not exist
         "409":
           content:
             application/json:

@@ -13,7 +13,7 @@ FROM alpine AS runner
 WORKDIR /app
 
 COPY ./.env /app/.env
-COPY ./config/config.yaml /app/config/config.yaml
+COPY ./configs/config.yaml /app/configs/config.yaml
 COPY --from=builder /app/binaryapp .
 
 CMD ["./binaryapp"]
