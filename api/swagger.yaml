@@ -1,5 +1,14 @@
 components:
   schemas:
+    ConfirmLoginBody:
+      properties:
+        code:
+          example: "1234"
+          type: string
+        uid:
+          example: 9c884669-0dbf-497d-b94f-cfd196278d8f
+          type: string
+      type: object
     ConfirmRegisterBody:
       properties:
         code:
@@ -50,6 +59,15 @@ components:
           format: date-time
           type: string
       type: object
+    entity.TokenPair:
+      properties:
+        access_token:
+          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3MTQwNjgxMTcsImlhdCI6MTcxNDA2NzUxNywicGhvbmVudW1iZXIiOiI5MDA5MDA5MDkwIiwidWlkIjoiMTBiNDNmOTItZWRhMC00ZWFhLTkwNTktNjVkMWFkYzdhNzM3In0.9rntx_CFGxCMByOlZa0zFLhIW4LNgQpruKX6wNSKXUo
+          type: string
+        refresh_token:
+          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3MTQwNzExMTcsImlhdCI6MTcxNDA2NzUxNywidWlkIjoiMTBiNDNmOTItZWRhMC00ZWFhLTkwNTktNjVkMWFkYzdhNzM3In0.2UVtNZ-lKub9ZrlDiwf0tD9Wx2e73QhdKeRxbtFwTE4
+          type: string
+      type: object
     errorResponseBody:
       properties:
         message:
@@ -77,7 +95,7 @@ paths:
         required: true
       responses:
         "204":
-          description: Successful confirmation, no content in response body
+          description: Successful login request, no content in response body
         "400":
           content:
             application/json:
@@ -96,19 +114,43 @@ paths:
               schema:
                 $ref: '#/components/schemas/errorResponseBody'
           description: Internal server error
-      summary: Log in.
+      summary: Log in
       tags:
       - Auth
   /api/login/confirm/:
     post:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConfirmLoginBody'
+        required: true
       responses:
-        "501":
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenPair'
+          description: Successful confirmation, token pair in response body
+        "400":
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/errorResponseBody'
-          description: ""
-      summary: Confirm user login.
+          description: Invalid request body or user does not exist
+        "422":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/errorResponseBody'
+          description: Wrong confirmation code provided or registration not finished
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/errorResponseBody'
+          description: Internal server error
+      summary: Confirm login
       tags:
       - Auth
   /api/refresh/:
@@ -120,7 +162,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/errorResponseBody'
           description: ""
-      summary: Refresh token pair.
+      summary: Refresh token pair
       tags:
       - Auth
   /api/register/:
@@ -162,7 +204,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/errorResponseBody'
           description: Internal server error
-      summary: Register new user.
+      summary: Register
       tags:
       - Auth
   /api/register/confirm/:
@@ -204,7 +246,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/errorResponseBody'
           description: Internal server error
-      summary: Confirm user registration.
+      summary: Confirm registration
       tags:
       - Auth
   /api/revoke/:
@@ -216,7 +258,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/errorResponseBody'
           description: ""
-      summary: Revoke token pair.
+      summary: Revoke token pair
       tags:
       - Auth
   /health:

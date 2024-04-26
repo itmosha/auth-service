@@ -17,6 +17,7 @@ type UsecaseInterface interface {
 	Register(ctx *context.Context, body *entity.RegisterBody) (userMeta *entity.UserMeta, err error)
 	ConfirmRegister(ctx *context.Context, body *entity.ConfirmRegisterBody) (tokenPair *entity.TokenPair, err error)
 	Login(ctx *context.Context, body *entity.LoginBody) (err error)
+	ConfirmLogin(ctx *context.Context, body *entity.ConfirmLoginBody) (tokenPair *entity.TokenPair, err error)
 }
 
 type Controller struct {
@@ -29,7 +30,7 @@ func NewController(uc UsecaseInterface, logger *logger.Logger) *Controller {
 	return &Controller{uc: uc, validator: validator.New(), logger: logger}
 }
 
-// @Title Register new user.
+// @Title Register
 // @Descriptiomn Register a new user using a phonenumber.
 // @Param body body entity.RegisterBody true "Registration body"
 // @Success 201 object entity.UserMeta "Successful registration, user meta in response body"
@@ -68,7 +69,7 @@ func (c *Controller) Register() http.HandlerFunc {
 	}
 }
 
-// @Title Confirm user registration.
+// @Title Confirm registration
 // @Descriptiomn Confirm user registration by uid.
 // @Param body body entity.ConfirmRegisterBody true "Confirm registration body"
 // @Success 200 object entity.TokenPair "Successful confirmation, token pair in response body"
@@ -109,10 +110,10 @@ func (c *Controller) ConfirmRegister() http.HandlerFunc {
 	}
 }
 
-// @Title Log in.
+// @Title Log in
 // @Descriptiomn Log in a user by phonenumber.
 // @Param body body entity.LoginBody true "Login body"
-// @Success 204 "Successful confirmation, no content in response body"
+// @Success 204 "Successful login request, no content in response body"
 // @Failure 400 object errorResponseBody "Invalid request body or user does not exist"
 // @Failure 422 object errorResponseBody "User registration not finished"
 // @Failure 500 object errorResponseBody "Internal server error"
@@ -147,17 +148,47 @@ func (c *Controller) Login() http.HandlerFunc {
 	}
 }
 
-// @Title Confirm user login.
-// @Failure 501 {object} errorResponseBody
+// @Title Confirm login
+// @Descriptiomn Confirm user login by uid.
+// @Param body body entity.ConfirmLoginBody true "Confirm login body"
+// @Success 200 object entity.TokenPair "Successful confirmation, token pair in response body"
+// @Failure 400 object errorResponseBody "Invalid request body or user does not exist"
+// @Failure 422 object errorResponseBody "Wrong confirmation code provided or registration not finished"
+// @Failure 500 object errorResponseBody "Internal server error"
 // @Resource Auth
 // @Route /api/login/confirm/ [post]
 func (c *Controller) ConfirmLogin() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		c.responseWithError(w, r, http.StatusNotImplemented, ErrNotImplemented)
+		ctx := context.Background()
+		body, err := readBodyToStruct(r, &entity.ConfirmLoginBody{})
+		if err != nil {
+			c.responseWithError(w, r, http.StatusBadRequest, err)
+			return
+		}
+		err = c.validator.StructCtx(ctx, body)
+		if err != nil {
+			errors := err.(validator.ValidationErrors)
+			c.responseWithError(w, r, http.StatusBadRequest, errors)
+			return
+		}
+		tokenPair, err := c.uc.ConfirmLogin(&ctx, body)
+		if err != nil {
+			if errors.Is(err, storage.ErrUserMetaNotFound) {
+				c.responseWithError(w, r, http.StatusBadRequest, err)
+			} else if errors.Is(err, usecase.ErrRegistrationNotFinished) {
+				c.responseWithError(w, r, http.StatusUnprocessableEntity, err)
+			} else if errors.Is(err, usecase.ErrWrongCodeProvided) {
+				c.responseWithError(w, r, http.StatusUnprocessableEntity, err)
+			} else {
+				c.responseWithError(w, r, http.StatusInternalServerError, err)
+			}
+			return
+		}
+		c.responseWithSuccess(w, r, http.StatusOK, tokenPair)
 	}
 }
 
-// @Title Refresh token pair.
+// @Title Refresh token pair
 // @Failure 501 {object} errorResponseBody
 // @Resource Auth
 // @Route /api/refresh/ [post]
@@ -167,7 +198,7 @@ func (c *Controller) Refresh() http.HandlerFunc {
 	}
 }
 
-// @Title Revoke token pair.
+// @Title Revoke token pair
 // @Failure 501 {object} errorResponseBody
 // @Resource Auth
 // @Route /api/revoke/ [post]

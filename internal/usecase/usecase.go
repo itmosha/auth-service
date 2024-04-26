@@ -124,3 +124,45 @@ func (uc *Usecase) Login(ctx *context.Context, body *entity.LoginBody) (err erro
 	err = uc.cache.SetLoginCode(ctx, userMeta.Uid, code)
 	return
 }
+
+func (uc *Usecase) ConfirmLogin(ctx *context.Context, body *entity.ConfirmLoginBody) (tokenPair *entity.TokenPair, err error) {
+	userMeta, err := uc.usersMetaStore.SelectByUid(ctx, body.Uid)
+	if err != nil {
+		return
+	} else if !userMeta.IsRegistered {
+		err = ErrRegistrationNotFinished
+		return
+	}
+
+	code, err := uc.cache.GetLoginCode(ctx, userMeta.Uid)
+	if errors.Is(err, storage.ErrRegisterCodeNotExist) {
+		err = ErrWrongCodeProvided
+		return
+	} else if err != nil {
+		return
+	}
+	if body.Code != code {
+		err = ErrWrongCodeProvided
+		return
+	}
+	_ = uc.cache.DelLoginCode(ctx, userMeta.Uid)
+	atClaims := map[string]interface{}{"uid": userMeta.Uid, "phonenumber": userMeta.Phonenumber}
+	rtClaims := map[string]interface{}{"uid": userMeta.Uid}
+	tp, err := uc.jwtClient.CreateTokenPair(atClaims, rtClaims)
+	if err != nil {
+		return
+	}
+	tokenPair = &entity.TokenPair{
+		AccessToken:  tp.AccessToken.Token,
+		RefreshToken: tp.RefreshToken.Token,
+	}
+	_, err = uc.sessionsStore.Insert(ctx,
+		&entity.Session{
+			UserUid:   userMeta.Uid,
+			Token:     tp.RefreshToken.Token,
+			ExpiresAt: tp.RefreshToken.Exp,
+			IssuedAt:  tp.RefreshToken.Iat,
+		},
+	)
+	return
+}
